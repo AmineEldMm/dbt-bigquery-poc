@@ -29,7 +29,7 @@ FROM delivery_zone dz
 SELECT
     cdz.event_id AS delivery_zone_id,
     datetime(cast(cdz.ingested_at AS TIMESTAMP),'Europe/Paris') AS deleted_at
-FROM mongo_mon_marche.catalog_delivery_zone cdz
+FROM `keplr-datawarehouse.mongo_mon_marche.catalog_delivery_zone` cdz
 WHERE cdz.deleted
 )
 SELECT
