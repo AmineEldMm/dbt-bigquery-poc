@@ -1,18 +1,19 @@
--- There is only 'Ile de la cité' on mongo_mon_marche, this is was there is not no Rungis data. This can be changed. 
--- When the validity starts in Novembre / December - this is when the history records where initially send from mongo to mm. 
 
+
+  -- There is only 'Ile de la cité' on mongo_mon_marche, this is was there is not no Rungis data. This can be changed. 
+-- When the validity starts in Novembre / December - this is when the history records where initially send from mongo to mm. 
 WITH delivery_zone AS (
 SELECT
-	cdz.id AS delivery_zone_id,
-	cdz."document" ->> 'type' AS delivery_zone_type,
-	cdz."document" ->> 'name' AS delivery_zone_name,
-	cdz."document" ->> 'shopId' AS shop_id,
-	(cdz."document" ->> 'enabled')::BOOL AS is_enabled,
-	cdz.updated_at as syncro 
-FROM mongo_mon_marche.catalog_delivery_zone cdz 
-WHERE NOT cdz.deleted 
-),
-delivery_zone_status_change AS (
+	event_id AS delivery_zone_id,
+	JSON_EXTRACT_SCALAR(document , "$.type") AS delivery_zone_type,
+	JSON_EXTRACT_SCALAR(document , "$.name") AS delivery_zone_name,
+	JSON_EXTRACT_SCALAR(document , "$.shopId") AS shop_id,
+	cast(JSON_EXTRACT_SCALAR(document , "$.enabled") as bool) AS is_enabled,
+	cdz.ingested_at as syncro 
+FROM `keplr-datawarehouse.mongo_mon_marche.catalog_delivery_zone`  as cdz 
+WHERE   cast(JSON_EXTRACT_SCALAR(document , "$.enabled") as bool)
+)
+,delivery_zone_status_change AS (
 SELECT 
 	dz.delivery_zone_id,
 	dz.delivery_zone_type,
@@ -23,11 +24,11 @@ SELECT
 	COALESCE(LAG(dz.is_enabled) OVER(PARTITION BY dz.delivery_zone_id,dz.shop_id ORDER BY dz.syncro) = dz.is_enabled,
 		FALSE) AS same_status_as_before
 FROM delivery_zone dz
-),
-delivery_zone_deleted_event AS (
+)
+,delivery_zone_deleted_event AS (
 SELECT
-    cdz.id AS delivery_zone_id,
-    cdz.synced_at::TIMESTAMP AT TIME ZONE 'Etc/UTC' AT TIME ZONE 'Europe/Paris' AS deleted_at
+    cdz.event_id AS delivery_zone_id,
+    datetime(cast(cdz.ingested_at AS TIMESTAMP),'Europe/Paris') AS deleted_at
 FROM mongo_mon_marche.catalog_delivery_zone cdz
 WHERE cdz.deleted
 )
@@ -40,7 +41,7 @@ SELECT
         least(
 	    COALESCE(
 	        LEAD(date(dzc.validity_start_at)) OVER(PARTITION BY dzc.delivery_zone_id,dzc.shop_id ORDER BY dzc.validity_start_at),
-	        date(CURRENT_DATE AT TIME ZONE 'Europe/Paris' + INTERVAL '1 day' )
+	        DATETIME_ADD(datetime(CURRENT_DATETIME("Europe/Paris")), INTERVAL 1 day )
 	    ),
 	    dzde.deleted_at
 	) AS validity_end_at,
