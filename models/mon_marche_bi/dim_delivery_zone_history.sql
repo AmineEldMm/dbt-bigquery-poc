@@ -9,7 +9,7 @@ SELECT
 	cdz."document" ->> 'shopId' AS shop_id,
 	(cdz."document" ->> 'enabled')::BOOL AS is_enabled,
 	cdz.updated_at as syncro 
-FROM {{ source('mongo_mon_marche', 'catalog_delivery_zone') }} cdz 
+FROM mongo_mon_marche.catalog_delivery_zone cdz 
 WHERE NOT cdz.deleted 
 ),
 delivery_zone_status_change AS (
@@ -28,7 +28,7 @@ delivery_zone_deleted_event AS (
 SELECT
     cdz.id AS delivery_zone_id,
     cdz.synced_at::TIMESTAMP AT TIME ZONE 'Etc/UTC' AT TIME ZONE 'Europe/Paris' AS deleted_at
-FROM {{ source('mongo_mon_marche', 'catalog_delivery_zone') }} cdz
+FROM mongo_mon_marche.catalog_delivery_zone cdz
 WHERE cdz.deleted
 )
 SELECT
