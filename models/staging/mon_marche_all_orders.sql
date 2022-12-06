@@ -1,14 +1,15 @@
 {{
     config(
         materialized='incremental',
-        unique_key='document_id',
+        unique_key='event_id',
 	indexes=[
-      {'columns': ['document_id'], 'unique': True}
+      {'columns': ['event_id'], 'unique': True}
     ]
     )
 }}
 
 SELECT
+    event_id,
     document_id,
 -- 2022/11/22 Using ingested_at time instead of synced_at time
     ingested_at,
