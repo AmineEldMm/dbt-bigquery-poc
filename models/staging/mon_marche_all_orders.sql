@@ -17,7 +17,7 @@ SELECT
     cluster_time,
     FALSE AS legacy
 FROM `keplr-datawarehouse.mongo_mon_marche.catalog_order` co
---WHERE NOT co.deleted
+WHERE 
 	{% if is_incremental() %}
-	AND COALESCE(co.ingested_at,co.synced_at) >= (SELECT MAX(synced_at) FROM {{ this }} WHERE NOT legacy)
+	 ingested_at >= (SELECT MAX(ingested_at) FROM {{ this }} )
 	{% endif %}
