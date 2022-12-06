@@ -41,3 +41,7 @@ models:
     mon_marche_bi:
       materialized: table
       schema: mon_marche_bi
+    
+    staging:
+      materialized: table
+      schema: staging
