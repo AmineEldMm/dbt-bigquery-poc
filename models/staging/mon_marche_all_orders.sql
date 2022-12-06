@@ -1,9 +1,9 @@
 {{
     config(
         materialized='incremental',
-        unique_key='id',
+        unique_key='document_id',
 	indexes=[
-      {'columns': ['id'], 'unique': True}
+      {'columns': ['document_id'], 'unique': True}
     ]
     )
 }}
