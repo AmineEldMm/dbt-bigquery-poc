@@ -1,3 +1,4 @@
+{{ config(schema='mon_marche_bi') }}
 
 
   -- There is only 'Ile de la cité' on mongo_mon_marche, this is was there is not no Rungis data. This can be changed. 
